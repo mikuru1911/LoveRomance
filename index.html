@@ -17,15 +17,21 @@
         <p>- But it always ends up failure.</p>
         <label for="textInput">Input:</label>
         <br>
-        <input type="text" id="textInput" style="width: 50%;" placeholder="Here is the sentence box"
-          aria-label="Text input">
-        <button onclick="processStart()">Process
-        </button>
-        <div id="loading" class="loading-spinner"></div>
-        <div id="output" style="color: rgb(239, 206, 206);"></div>
-        <br>
+
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="textInput" style="width: 50%;" placeholder="Here is the sentence box"
+            aria-label="Text input">
+          <button style="margin-left: 10px;" onclick="processStart()">Process</button>
+          <div id="wrapper" style="margin-left: 10px; display: flex; align-items: center;"></div>
+        </div>
+
       </div>
+
+      <!-- <div id="loading" class="loading-spinner"></div> -->
+      <div id="output" style="color: rgb(239, 206, 206);"></div>
+      <br>
     </div>
+  </div>
   </div>
   <script src="https://unpkg.com/compromise"></script>
   <script src="./index.js"></script>
