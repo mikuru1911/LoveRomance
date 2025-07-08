@@ -25,7 +25,11 @@ const processStart = () => {
   setTimeout(() => {
     wrapper.textContent = null;
     let doc = nlp(text);
-    let past = doc.sentences().toPastTense().text();
-    output.innerText = past;
+    let json = doc.json();
+    let jsonObj = JSON.parse(json);
+
+    let res = null;
+    //let past = doc.sentences().toPastTense().text();
+    output.innerText = res;
   }, 1000);
 }
