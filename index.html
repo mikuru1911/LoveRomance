@@ -1,23 +1,29 @@
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
 <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mystery+Quest&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./index.css">
 
 <body>
-  <div class="w3-bar w3-black w3-large">
-<div class="w3-row w3-padding-16">   
-  <div class="w3-theme-l1 w3-twothird w3-container">
-    <h3 class="w3-text-orange">Past tense converter <i class="em em-computer"></i></h3> 
-    <p class="instruction">Input a sentence in present tense and click process to convert the sentence to past tense.</p>
-    <label for="textInput">Input:</label>
-    <br>
-    <input type="text" id="textInput" class="w3-input w3-border" placeholder="Enter your text here" aria-label="Text input">
-    <button class="w3-button-orange w3-margin-top"onclick="convertToPast()">Process</i>
-    </button>
-    <div id="loading" class="loading-spinner w3-margin-left"></div>
-    <div id="output" class="w3-container w3-theme-l1 w3-padding w3-margin-top"></div>
-    <br>
-  </div>        
-</div>
- </div>
-<script src="https://unpkg.com/compromise"></script>
+  <div>
+    <div>
+      <div>
+        <h3 class="w3-text-white first-line">LOVE LOMANCE <i class="em em-heart"></i></h3>
+        <p class="instruction">~ There is the love lomance in the world ~</p>
+        <p>- People are trying to discover the true love.</p>
+        <p>- But it always ends up failure.</p>
+        <label for="textInput">Input:</label>
+        <br>
+        <input type="text" id="textInput" style="width: 50%;" placeholder="Here is the sentence box"
+          aria-label="Text input">
+        <button onclick="processStart()">Process
+        </button>
+        <div id="loading" class="loading-spinner"></div>
+        <div id="output" style="color: rgb(239, 206, 206);"></div>
+        <br>
+      </div>
+    </div>
+  </div>
+  <script src="https://unpkg.com/compromise"></script>
+  <script src="./index.js"></script>
 </body>
