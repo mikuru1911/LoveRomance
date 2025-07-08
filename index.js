@@ -19,9 +19,7 @@ const processStart = () => {
 
   // ボタンを押したらローディング猫が出る。
   // 1秒後に消える
-  setTimeout(() => {
-    wrapper.appendChild(img)
-  }, 0)
+  wrapper.appendChild(img)
 
   // ここが出力処理
   setTimeout(() => {
