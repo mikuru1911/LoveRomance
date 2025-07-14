@@ -22,6 +22,28 @@ body {
   animation: spin 1s linear infinite;
 }
 
+/*noun phraseをハイライトする用*/
+.nounPhrase {
+  color:chartreuse;
+}
+
+/*背景色用*/
+.simple { 
+  background-color: #3498db;
+}
+
+.compounds {
+  background-color: forestgreen;
+}
+
+.complex {
+  background-color: azure;
+}
+
+.others {
+  background-color:tomato;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
