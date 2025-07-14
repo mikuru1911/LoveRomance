@@ -1,14 +1,19 @@
 body {
-  background-color: #a367d7;
+  background-color: #b087d4;
   margin: 60px 20px 120px 80px;
-  margin-top: 150px;
+  margin-top: 70px;
   font-size: 35px;
   font-family: 'Mystery Quest', cursive;
 }
 
+.example {
+  font-size: 30px;
+  margin-left: 50px;
+}
+
 .first-line {
   margin: 5px;
-  font-size: 4dvb;
+  font-size: 45px;
   font-family: 'Mystery Quest', cursive;
 }
 
@@ -24,11 +29,11 @@ body {
 
 /*noun phraseをハイライトする用*/
 .nounPhrase {
-  color:chartreuse;
+  color: chartreuse;
 }
 
 /*背景色用*/
-.simple { 
+.simple {
   background-color: #3498db;
 }
 
@@ -41,7 +46,7 @@ body {
 }
 
 .others {
-  background-color:tomato;
+  background-color: tomato;
 }
 
 @keyframes spin {
