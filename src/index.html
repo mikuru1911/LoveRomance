@@ -1,0 +1,54 @@
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-black.css">
+<link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Mystery+Quest&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./index.css">
+
+<body>
+  <div>
+    <div>
+      <div>
+        <div style="display: flex;">
+          <img src="./images/unicorn.png" alt="Unicorn" width="70">
+          <h3 class="w3-text-white first-line">Green Task </i></h3>
+        </div>
+        <p>~ example each color ~</p>
+        <div class="example">
+          <p>simple sentence :
+            <span class="simple">background color</span>
+          </p>
+          <p>compound sentence :
+            <span class="compounds">background color</span>
+          </p>
+          <p>complex sentence :
+            <span class="complex">background color</span>
+          </p>
+          <p>other sentences :
+            <span class="others">background color</span>
+          </p>
+          <p>noun phrases :
+            <span class="nounPhrase">color</span>
+          </p>
+        </div>
+
+        <label for="textInput">Input:</label>
+        <br>
+
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="textInput" style="width: 50%;" placeholder="Here is the sentence box"
+            aria-label="Text input">
+          <button style="margin-left: 10px;" onclick="processStart()">Process</button>
+          <div id="wrapper" style="margin-left: 10px; display: flex; align-items: center;"></div>
+        </div>
+
+      </div>
+
+      <!-- <div id="loading" class="loading-spinner"></div> -->
+      <div id="output"></div>
+      <br>
+    </div>
+  </div>
+  </div>
+  <script src="https://unpkg.com/compromise"></script>
+  <script src="./index.js"></script>
+</body>
