@@ -30,6 +30,7 @@ const processStart = () => {
     const doc = nlp(text);
     const sentences = doc.sentences();
     let sentenceType = [];
+    let NPmessage = [];
 
     const processedText = [];
     for (let i = 0; i < sentences.length; i++) {
@@ -49,19 +50,26 @@ const processStart = () => {
         bgColor = "others";
       }
       //colored noun phrases
-      let result = detectNounPhrase(sentences.eq(i));
+      let {result, msg} = detectNounPhrase(sentences.eq(i));
+      for(let j=0; j<msg.length; j++)
+      {
+        NPmessage.push(msg[j]);
+      }
+
       //store processed text
       processedText.push(`<p class="${bgColor}">${result}</p>`);
     }
 
+    console.log(processedText.join(''));
     output.innerHTML = processedText.join('');
 
     const nounPhrases = document.querySelectorAll(".nounPhrase");
+    let i=0;
 
     nounPhrases.forEach((phrase) => {
       const tooltip = document.createElement("div");
       tooltip.className = "tooltip";
-      tooltip.textContent = "Mr. retsu is God.";
+      tooltip.textContent = NPmessage[i];
       tooltip.style.display = "none";
       phrase.style.position = "relative";
       phrase.appendChild(tooltip);
@@ -72,48 +80,54 @@ const processStart = () => {
       phrase.addEventListener("mouseout", function () {
         tooltip.style.display = "none";
       });
+      i++;
     })
   }, 1000);
 }
 
 function getType(doc) {
 
-  const items = doc.splitOn('#Conjunction');
-  let NumOfClauses = 0;
-  for (let i = 0; i < items.length; i++) {
-    let tmp = items.eq(i);
-    if (tmp.verbs().found) {
-      NumOfClauses += tmp.clauses().length;
-    }
-  }
+  let NumOfClauses = doc.clauses().length;
+
+  console.log(NumOfClauses);
 
   const jsonObj = doc.json();
-  if (NumOfClauses >= 2) {
-    if (isCompounds(jsonObj)) {
+  if (NumOfClauses >= 2)
+  {
+    if (isCompounds(jsonObj))
+    {
       return 1;
     }
-    else {
+    else 
+    {
       return 2;
     }
   }
   else if(NumOfClauses === 1)
   {
-    if(isComplex)
+    if(isComplex(jsonObj))
     {
       return 2;
     }
     else
     {
-      return 0;      
+      return 0;
     }
   }
-  else {
+  else if(NumOfClauses === 0)
+  {
     return -1;
   }
 }
 
 function isComplex(sentence)
 {
+
+  let isFirstNoun = false;
+  let isSecondNoun = false;
+  let isFirstSet = false;
+  let isSecondSet = false;
+
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
     //search all tags in a word
@@ -128,7 +142,7 @@ function isComplex(sentence)
         else
         {
           isFirstNoun = true;
-        } 
+        }
       }
 
       if(sentence[0].terms[i].tags[j] == "Verb")
@@ -165,41 +179,58 @@ function isCompounds(sentence)
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
-    //search all tags in a word
-    for(let j = 0; j<sentence[0].terms[i].tags.length; j++)
+    if(sentence[0].terms[i].tags.includes("Noun"))
     {
-      if(sentence[0].terms[i].tags[j] == "Noun")
+      if(isFirstSet)
       {
-        if(isFirstSet && isFANBOYS)
+        isSecondNoun = true;
+      }
+      else
+      {
+        isFirstNoun = true;
+      } 
+    }
+
+    if(sentence[0].terms[i].tags.includes("Verb"))
+    {
+      if(isFirstNoun && !isSecondNoun)
+      {
+        isFirstSet = true;
+      }
+      else if(isSecondNoun)
+      {
+        isSecondSet = true;
+      }
+    }
+
+    if(FANBOYS.includes(sentence[0].terms[i].normal))
+    {
+      let isIllegal = false;
+      if(sentence[0].terms[i].normal==="and")
+      {
+        if(i<sentence[0].terms.length-2)
         {
-          isSecondNoun = true;
+          if(sentence[0].terms[i+2].tags.includes("Verb"))
+          {
+            isFANBOYS = true;
+          }
+          else
+          {
+            isIllegal = true;
+          }
         }
         else
         {
-          isFirstNoun = true;
-        } 
-      }
-
-      if(sentence[0].terms[i].tags[j] == "Verb")
-      {
-        if(isFirstNoun && !isSecondNoun)
-        {
-          isFirstSet = true;
-        }
-        else if(isSecondNoun)
-        {
-          isSecondSet = true;
+          isIllegal = true;
         }
       }
 
-      if(FANBOYS.includes(sentence[0].terms[i].normal))
+      if(isFirstSet && !isIllegal)
       {
-        if(isFirstSet)
-        {
-          isFANBOYS = true;
-        }
+        isFANBOYS = true;
       }
     }
+    
   }
   
   if(isFANBOYS)
@@ -215,35 +246,117 @@ function isCompounds(sentence)
 //Noun Phraseを検出して色を置き換えます。
 function detectNounPhrase(doc)
 {
-  let nounPhrases = doc.nouns();
   let result = doc.text();
-  let arr = nounPhrases.out('array');
+  let jsonObj = doc.json();
+  let firstNoun = false;
 
-  for(let i=0; i<nounPhrases.length; i++)
+  let NP = [];
+  let msg = [];
+  msg.push("color");
+
+  let words = [];
+
+  let NPwords = [];
+
+  for(let i=0; i<jsonObj[0].terms.length; i++)
   {
-    result = result.replace(arr[i], `<span class="nounPhrase">${arr[i]}</span>`);
-  }
-
-  return result;
-}
-
-function nounPharaseCtegory(doc)
-{
-  let jsonObj =  doc.json();
-  let result = [];
-  let pos = ["Determiner", "Noun", "Adjective"];
-  for(let i=0; i<jsonObj.terms.length; i++)
-  {
-    for(let j=0; j<jsonObj.terms.tags.length; j++)
+    let isComma = false;
+    if(jsonObj[0].terms[i].tags.includes("Noun"))
     {
-      if(pos.includes(jsonObj.terms[i].tags[j]))
-      {
-        result.push(jsonObj.terms[i].tags[j]);
-      }
+      NP.push("Noun");
+      if(jsonObj[0].terms[i].post==", ") isComma = true;
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+      firstNoun = true;
     }
+    else if(jsonObj[0].terms[i].tags.includes("Determiner"))
+    {
+      NP.push("Determiner");
+      if(jsonObj[0].terms[i].post==", ") isComma = true;
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+    }
+    else if(jsonObj[0].terms[i].tags.includes("Adjective"))
+    {
+      NP.push("Adjective");
+      if(jsonObj[0].terms[i].post==", ") isComma = true;
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+    }
+    else if(jsonObj[0].terms[i].tags.includes("Preposition"))
+    {
+      NP.push("Preposition");
+      if(jsonObj[0].terms[i].post==", ") isComma = true;
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+    }
+    else if(jsonObj[0].terms[i].text === "and" && firstNoun)
+    {
+      NP.push("Conjunction");
+      if(jsonObj[0].terms[i].post==", ") isComma = true;
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+    }
+    else
+    {
+      if(firstNoun)
+      {
+        if(words.length>0)
+        {
+          htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
+          NPwords.push(htmlText);
+          words = [];
+        }
+        if(NP.length>0)
+        {
+          msg.push(NP.join(' '));
+          NP = [];
+        }
+      }
+      
+      NPwords.push(jsonObj[0].terms[i].text+jsonObj[0].terms[i].post);
+      
+      firstNoun = false;
+    }
+
+    if(isComma)
+    {
+      console.log("isComma");
+      if(words.length>0)
+      {
+        htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
+        NPwords.push(htmlText);
+        words = [];
+      }
+      if(NP.length>0)
+      {
+        msg.push(NP.join(' '));
+        NP = [];
+      }
+      
+      firstNoun = false;
+    }
+    
   }
 
-  return result.join('');
+  if(words.length>0)
+  {
+    htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
+    NPwords.push(htmlText);
+  }
+
+  if(NP.length>0)
+  {
+    msg.push(NP.join(' '));
+  }
+
+  for(let i=0; i<NPwords.length; i++)
+  {
+    result = NPwords.join(' ');
+  }
+  return {result, msg};
 }
+
+
 
 
