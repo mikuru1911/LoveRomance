@@ -78,11 +78,61 @@ function getType(doc)
   }
   else if(NumOfClauses === 1)
   {
-    return 0;
+    if(isComplex)
+    {
+      return 2;
+    }
+    else
+    {
+      return 0;      
+    }
   }
   else
   {
     return -1;
+  }
+}
+
+function isComplex(sentence)
+{
+  for(let i = 0; i<sentence[0].terms.length; i++)
+  {
+    //search all tags in a word
+    for(let j = 0; j<sentence[0].terms[i].tags.length; j++)
+    {
+      if(sentence[0].terms[i].tags[j] == "Noun")
+      {
+        if(isFirstSet)
+        {
+          isSecondNoun = true;
+        }
+        else
+        {
+          isFirstNoun = true;
+        } 
+      }
+
+      if(sentence[0].terms[i].tags[j] == "Verb")
+      {
+        if(isFirstNoun && !isSecondNoun)
+        {
+          isFirstSet = true;
+        }
+        else if(isSecondNoun)
+        {
+          isSecondSet = true;
+        }
+      }
+    }
+  }
+
+  if(isSecondSet === true)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }
 
@@ -149,12 +199,32 @@ function detectNounPhrase(doc)
   let nounPhrases = doc.nouns();
   let result = doc.text();
   let arr = nounPhrases.out('array');
+
   for(let i=0; i<nounPhrases.length; i++)
   {
     result = result.replace(arr[i], `<span class="nounPhrase">${arr[i]}</span>`);
   }
 
   return result;
+}
+
+function nounPharaseCtegory(doc)
+{
+  let jsonObj =  doc.json();
+  let result = [];
+  let pos = ["Determiner", "Noun", "Adjective"];
+  for(let i=0; i<jsonObj.terms.length; i++)
+  {
+    for(let j=0; j<jsonObj.terms.tags.length; j++)
+    {
+      if(pos.includes(jsonObj.terms[i].tags[j]))
+      {
+        result.push(jsonObj.terms[i].tags[j]);
+      }
+    }
+  }
+
+  return result.join('');
 }
 
 
