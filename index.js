@@ -319,7 +319,7 @@ function detectNounPhrase(doc)
       firstNoun = false;
     }
 
-    if(isComma)
+    if(isComma && firstNoun)
     {
       console.log("isComma");
       if(words.length>0)
@@ -333,8 +333,17 @@ function detectNounPhrase(doc)
         msg.push(NP.join(' '));
         NP = [];
       }
-      
       firstNoun = false;
+      isComma = false;
+    }
+    else if(isComma && !firstNoun)
+    {
+      if(words.length>0)
+      {
+        NPwords.push(words.join(' '));
+      }
+      words = [];
+      NP = [];
     }
     
   }
