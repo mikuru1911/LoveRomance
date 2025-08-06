@@ -140,6 +140,7 @@ function isComplex(sentence)
   let isSecondNoun = false;
   let isFirstSet = false;
   let isSecondSet = false;
+  const RP = ["who", "where", "which", "whose"];
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
@@ -167,6 +168,28 @@ function isComplex(sentence)
         else if(isSecondNoun)
         {
           isSecondSet = true;
+        }
+      }
+
+      if(sentence[0].terms[i].tags[j] == "Determiner")
+      {
+        if( i>0 && sentence[0].terms[i].text=="that")
+        {
+          if(sentence[0].terms[i-1].tags.includes("Noun"))
+          {
+            return true;
+          }
+        }
+      }
+
+      if(sentence[0].terms[i].tags[j] == "Preposition")
+      {
+        for(let k=0; k<4; k++)
+        {
+          if(sentence[0].terms[i].text == RP[j] && i!=0)
+          {
+             return true;
+          }
         }
       }
     }
@@ -364,16 +387,27 @@ function detectNounPhrase(doc)
 
     if(isRP)
     {
-      console.log("isRP")
       NP.push("Relative pronoun");
       let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
       words.push(word);
       i++
+      let v = false;
       while(i<jsonObj[0].terms.length)
       {
-        if(jsonObj[0].terms[i].tags.includes("preposition"))
+        if(jsonObj[0].terms[i].tags.includes("Verb"))
         {
-          break;
+          if(!v)
+          {
+            NP.push(jsonObj[0].terms[i].tags[0]);
+            let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+            words.push(word);
+            v = true;
+          }
+          else
+          {
+            i--;
+            break;
+          }
         }
         else
         {
