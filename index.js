@@ -313,6 +313,16 @@ function detectNounPhrase(doc)
           NP = [];
         }
       }
+      else
+      {
+        if(words.length>0)
+        {
+          NPwords.push(words.join(' '));
+        }
+
+        words = [];
+        NP = [];
+      }
       
       NPwords.push(jsonObj[0].terms[i].text+jsonObj[0].terms[i].post);
       
@@ -348,13 +358,17 @@ function detectNounPhrase(doc)
     
   }
 
-  if(words.length>0)
+  if(words.length>0 && firstNoun)
   {
     htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
     NPwords.push(htmlText);
   }
+  else
+  {
+    NPwords.push(words.join(' '));
+  }
 
-  if(NP.length>0)
+  if(NP.length>0 && firstNoun)
   {
     msg.push(NP.join(' '));
   }
