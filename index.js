@@ -2,8 +2,8 @@ const processStart = () => {
   const text = document.getElementById('textInput').value;
   const output = document.getElementById('output');
   const loading = document.getElementById('loading');
-  const btn = document.getElementById("btn")
-  const wrapper = document.getElementById("wrapper")
+  const btn = document.getElementById("btn");
+  const wrapper = document.getElementById("wrapper");
 
   if (text.trim() === "") {
     output.innerText = "Please enter some text.";
@@ -100,7 +100,14 @@ function getType(doc) {
     }
     else 
     {
-      return 2;
+      if(isComplex(jsonObj))
+      {
+        return 2;
+      }
+      else
+      {
+        return 0;
+      }
     }
   }
   else if(NumOfClauses === 1)
@@ -249,6 +256,7 @@ function detectNounPhrase(doc)
   let result = doc.text();
   let jsonObj = doc.json();
   let firstNoun = false;
+  let isVerb = false;
 
   let NP = [];
   let msg = [];
@@ -275,6 +283,7 @@ function detectNounPhrase(doc)
       if(jsonObj[0].terms[i].post==", ") isComma = true;
       let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
       words.push(word);
+      firstNoun = true;
     }
     else if(jsonObj[0].terms[i].tags.includes("Adjective"))
     {
@@ -329,7 +338,7 @@ function detectNounPhrase(doc)
       firstNoun = false;
     }
 
-    if(isComma && firstNoun)
+    if(isComma && firstNoun && isVerb)
     {
       console.log("isComma");
       if(words.length>0)
@@ -346,7 +355,7 @@ function detectNounPhrase(doc)
       firstNoun = false;
       isComma = false;
     }
-    else if(isComma && !firstNoun)
+    else if(isComma && !firstNoun && !isVerb)
     {
       if(words.length>0)
       {
@@ -354,6 +363,11 @@ function detectNounPhrase(doc)
       }
       words = [];
       NP = [];
+    }
+
+    if(jsonObj[0].terms[i].tags.includes("Verb"))
+    {
+      isVerb = true;
     }
     
   }
