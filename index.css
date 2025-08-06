@@ -30,7 +30,7 @@ body {
 /*noun phraseをハイライトする用*/
 /*For noun phrases*/
 .nounPhrase {
-  color: chartreuse;
+  color: rgb(158, 197, 52);
 }
 
 /*背景色用*/
