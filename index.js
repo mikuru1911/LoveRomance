@@ -60,7 +60,6 @@ const processStart = () => {
       processedText.push(`<p class="${bgColor}">${result}</p>`);
     }
 
-    console.log(processedText.join(''));
     output.innerHTML = processedText.join('');
 
     const nounPhrases = document.querySelectorAll(".nounPhrase");
@@ -89,11 +88,12 @@ function getType(doc) {
 
   let NumOfClauses = doc.clauses().length;
 
-  let NumOfVerb = doc.verbs().length;
+  //let NumOfVerb = doc.verbs().length;
 
   const jsonObj = doc.json();
+  console.log(jsonObj);
 
-  if(NumOfVerb == 0)
+  if(!isContainVerb(jsonObj))
   {
     return -1;
   }
@@ -133,6 +133,19 @@ function getType(doc) {
   }
 }
 
+function isContainVerb(sentence)
+{
+  for(let i=0; i<sentence[0].terms.length; i++)
+  {
+    if(sentence[0].terms[i].tags.includes("Verb"))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function isComplex(sentence)
 {
 
@@ -144,11 +157,20 @@ function isComplex(sentence)
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
-    //search all tags in a word
-    for(let j = 0; j<sentence[0].terms[i].tags.length; j++)
+    if(sentence[0].terms[i].tags.includes("Verb"))
     {
-      if(sentence[0].terms[i].tags[j] == "Noun")
+      if(isFirstNoun && !isSecondNoun)
       {
+        isFirstSet = true;
+      }
+      else if(isSecondNoun)
+      {
+        isSecondSet = true;
+      }
+    }
+
+    if(sentence[0].terms[i].tags.includes("Noun"))
+    {
         if(isFirstSet)
         {
           isSecondNoun = true;
@@ -157,43 +179,32 @@ function isComplex(sentence)
         {
           isFirstNoun = true;
         }
-      }
+    }
+  
 
-      if(sentence[0].terms[i].tags[j] == "Verb")
+    if(sentence[0].terms[i].tags.includes("Determiner"))
+    {
+      if( i>0 && sentence[0].terms[i].text=="that")
       {
-        if(isFirstNoun && !isSecondNoun)
+        if(sentence[0].terms[i-1].tags.includes("Noun"))
         {
-          isFirstSet = true;
-        }
-        else if(isSecondNoun)
-        {
-          isSecondSet = true;
-        }
-      }
-
-      if(sentence[0].terms[i].tags[j] == "Determiner")
-      {
-        if( i>0 && sentence[0].terms[i].text=="that")
-        {
-          if(sentence[0].terms[i-1].tags.includes("Noun"))
-          {
-            return true;
-          }
+          return true;
         }
       }
+    }
 
-      if(sentence[0].terms[i].tags[j] == "Preposition")
+    if(sentence[0].terms[i].tags.includes("Preposition"))
+    {
+      for(let k=0; k<4; k++)
       {
-        for(let k=0; k<4; k++)
+        if(sentence[0].terms[i].text == RP[k] && i!=0)
         {
-          if(sentence[0].terms[i].text == RP[j] && i!=0)
-          {
-             return true;
-          }
+          return true;
         }
       }
     }
   }
+  
 
   if(isSecondSet === true)
   {
@@ -208,6 +219,7 @@ function isComplex(sentence)
 function isCompounds(sentence)
 {
   const FANBOYS = ["for", "and", "nor", "but", "or", "yet", "so"];
+  const RP = ["who", "where", "which", "whose"];
   let isFirstNoun = false;
   let isSecondNoun = false;
   let isFirstSet = false;
@@ -215,17 +227,6 @@ function isCompounds(sentence)
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
-    if(sentence[0].terms[i].tags.includes("Noun"))
-    {
-      if(isFirstSet)
-      {
-        isSecondNoun = true;
-      }
-      else
-      {
-        isFirstNoun = true;
-      } 
-    }
 
     if(sentence[0].terms[i].tags.includes("Verb"))
     {
@@ -239,35 +240,72 @@ function isCompounds(sentence)
       }
     }
 
-    if(FANBOYS.includes(sentence[0].terms[i].normal))
+    if(sentence[0].terms[i].tags.includes("Noun"))
     {
-      let isIllegal = false;
-      if(sentence[0].terms[i].normal==="and")
+      if(isFirstSet)
       {
-        if(i<sentence[0].terms.length-2)
-        {
-          if(sentence[0].terms[i+2].tags.includes("Verb"))
-          {
-            isFANBOYS = true;
-          }
-          else
-          {
-            isIllegal = true;
-          }
-        }
-        else
-        {
-          isIllegal = true;
-        }
+        isSecondNoun = true;
       }
-
-      if(isFirstSet && !isIllegal)
+      else
       {
-        isFANBOYS = true;
+        isFirstNoun = true;
+      } 
+    }
+
+
+    if(sentence[0].terms[i].post ==", ")
+    {
+      if(isFirstSet)
+      {
+        if(i<sentence[0].terms.length-1 && FANBOYS.includes(sentence[0].terms[i+1].normal))
+        {
+          let j = i+2;
+          let isRP = false;
+          let n = false;
+          let v = false;
+          while(j<sentence[0].terms.length)
+          {
+            if(sentence[0].terms[j].tags.includes("Conjunction"))
+            {
+              break;
+            }
+
+            if(sentence[0].terms[j].text=="that" && sentence[0].terms[j-1].tags.includes("Noun"))
+            {
+              isRP = true;
+            }
+
+            for(let k=0; k<4; k++)
+            {
+              if(sentence[0].terms[i].text == RP[k])
+              { 
+                isRP = true;
+              }
+            }
+
+            if(!isRP && sentence[0].terms[j].tags.includes("Noun"))
+            {
+              n = true;
+            }
+
+            if(!isRP && sentence[0].terms[j].tags.includes("Verb"))
+            {
+              v = true;
+            }
+
+            if(n && v)
+            {
+              isFANBOYS = true;
+            }
+
+            j++;
+          }
+        }
       }
     }
-    
   }
+    
+  
   
   if(isFANBOYS)
   {
