@@ -89,9 +89,15 @@ function getType(doc) {
 
   let NumOfClauses = doc.clauses().length;
 
-  console.log(NumOfClauses);
+  let NumOfVerb = doc.verbs().length;
 
   const jsonObj = doc.json();
+
+  if(NumOfVerb == 0)
+  {
+    return -1;
+  }
+
   if (NumOfClauses >= 2)
   {
     if (isCompounds(jsonObj))
@@ -249,7 +255,6 @@ function isCompounds(sentence)
     return false;
   }
 }
-
 //Noun Phraseを検出して色を置き換えます。
 function detectNounPhrase(doc)
 {
@@ -257,15 +262,16 @@ function detectNounPhrase(doc)
   let jsonObj = doc.json();
   let firstNoun = false;
   let isVerb = false;
+  let isRP = false;
 
   let NP = [];
   let msg = [];
   msg.push("color");
 
   let words = [];
-
   let NPwords = [];
 
+  const RP = ["who", "where", "which", "whose"];
   for(let i=0; i<jsonObj[0].terms.length; i++)
   {
     let isComma = false;
@@ -279,11 +285,22 @@ function detectNounPhrase(doc)
     }
     else if(jsonObj[0].terms[i].tags.includes("Determiner"))
     {
-      NP.push("Determiner");
-      if(jsonObj[0].terms[i].post==", ") isComma = true;
-      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
-      words.push(word);
-      firstNoun = true;
+      if( i>0 && jsonObj[0].terms[i].text=="that")
+      {
+        if(jsonObj[0].terms[i-1].tags.includes("Noun"))
+        {
+          isRP = true;
+        }
+      }
+
+      if(!isRP)
+      {
+        NP.push("Determiner");
+        if(jsonObj[0].terms[i].post==", ") isComma = true;
+        let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+        words.push(word);
+        firstNoun = true;    
+      }
     }
     else if(jsonObj[0].terms[i].tags.includes("Adjective"))
     {
@@ -294,6 +311,13 @@ function detectNounPhrase(doc)
     }
     else if(jsonObj[0].terms[i].tags.includes("Preposition"))
     {
+      for(let j=0; j<4; j++)
+      {
+        if(jsonObj[0].terms[i].text == RP[j])
+        {
+          isRP = true;
+        }
+      }
       NP.push("Preposition");
       if(jsonObj[0].terms[i].post==", ") isComma = true;
       let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
@@ -338,6 +362,45 @@ function detectNounPhrase(doc)
       firstNoun = false;
     }
 
+    if(isRP)
+    {
+      console.log("isRP")
+      NP.push("Relative pronoun");
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+      i++
+      while(i<jsonObj[0].terms.length)
+      {
+        if(jsonObj[0].terms[i].tags.includes("preposition"))
+        {
+          break;
+        }
+        else
+        {
+          NP.push(jsonObj[0].terms[i].tags[0]);
+          let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+          words.push(word);
+        }
+        i++;
+      }
+      if(words.length>0)
+      {
+        htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
+        NPwords.push(htmlText);
+        words = [];
+      }
+      if(NP.length>0)
+      {
+        msg.push(NP.join('/ '));
+        NP = [];
+      }
+      firstNoun = false;
+      isComma = false;
+      isVerb = false;
+      isRP = false;
+      continue;
+    }
+
     if(isComma && firstNoun && isVerb)
     {
       console.log("isComma");
@@ -354,6 +417,7 @@ function detectNounPhrase(doc)
       }
       firstNoun = false;
       isComma = false;
+      isVerb = false;
     }
     else if(isComma && !firstNoun && !isVerb)
     {
