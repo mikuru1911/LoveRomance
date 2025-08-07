@@ -31,6 +31,7 @@ const processStart = () => {
     const sentences = doc.sentences();
     let sentenceType = [];
     let NPmessage = [];
+    NPmessage.push("color");
 
     const processedText = [];
     for (let i = 0; i < sentences.length; i++) {
@@ -327,7 +328,6 @@ function detectNounPhrase(doc)
 
   let NP = [];
   let msg = [];
-  msg.push("color");
 
   let words = [];
   let NPwords = [];
@@ -379,6 +379,7 @@ function detectNounPhrase(doc)
           isRP = true;
         }
       }
+      
       NP.push("Preposition");
       if(jsonObj[0].terms[i].post==", ") isComma = true;
       let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
