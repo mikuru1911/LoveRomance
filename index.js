@@ -2,8 +2,8 @@ const processStart = () => {
   const text = document.getElementById('textInput').value;
   const output = document.getElementById('output');
   const loading = document.getElementById('loading');
-  const btn = document.getElementById("btn")
-  const wrapper = document.getElementById("wrapper")
+  const btn = document.getElementById("btn");
+  const wrapper = document.getElementById("wrapper");
 
   if (text.trim() === "") {
     output.innerText = "Please enter some text.";
@@ -31,6 +31,7 @@ const processStart = () => {
     const sentences = doc.sentences();
     let sentenceType = [];
     let NPmessage = [];
+    NPmessage.push("color");
 
     const processedText = [];
     for (let i = 0; i < sentences.length; i++) {
@@ -60,7 +61,6 @@ const processStart = () => {
       processedText.push(`<p class="${bgColor}">${result}</p>`);
     }
 
-    console.log(processedText.join(''));
     output.innerHTML = processedText.join('');
 
     const nounPhrases = document.querySelectorAll(".nounPhrase");
@@ -89,9 +89,16 @@ function getType(doc) {
 
   let NumOfClauses = doc.clauses().length;
 
-  console.log(NumOfClauses);
+  //let NumOfVerb = doc.verbs().length;
 
   const jsonObj = doc.json();
+  console.log(jsonObj);
+
+  if(!isContainVerb(jsonObj))
+  {
+    return -1;
+  }
+
   if (NumOfClauses >= 2)
   {
     if (isCompounds(jsonObj))
@@ -100,7 +107,14 @@ function getType(doc) {
     }
     else 
     {
-      return 2;
+      if(isComplex(jsonObj))
+      {
+        return 2;
+      }
+      else
+      {
+        return 0;
+      }
     }
   }
   else if(NumOfClauses === 1)
@@ -120,6 +134,19 @@ function getType(doc) {
   }
 }
 
+function isContainVerb(sentence)
+{
+  for(let i=0; i<sentence[0].terms.length; i++)
+  {
+    if(sentence[0].terms[i].tags.includes("Verb"))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function isComplex(sentence)
 {
 
@@ -127,14 +154,24 @@ function isComplex(sentence)
   let isSecondNoun = false;
   let isFirstSet = false;
   let isSecondSet = false;
+  const RP = ["who", "where", "which", "whose"];
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
-    //search all tags in a word
-    for(let j = 0; j<sentence[0].terms[i].tags.length; j++)
+    if(sentence[0].terms[i].tags.includes("Verb"))
     {
-      if(sentence[0].terms[i].tags[j] == "Noun")
+      if(isFirstNoun && !isSecondNoun)
       {
+        isFirstSet = true;
+      }
+      else if(isSecondNoun)
+      {
+        isSecondSet = true;
+      }
+    }
+
+    if(sentence[0].terms[i].tags.includes("Noun"))
+    {
         if(isFirstSet)
         {
           isSecondNoun = true;
@@ -143,21 +180,32 @@ function isComplex(sentence)
         {
           isFirstNoun = true;
         }
-      }
+    }
+  
 
-      if(sentence[0].terms[i].tags[j] == "Verb")
+    if(sentence[0].terms[i].tags.includes("Determiner"))
+    {
+      if( i>0 && sentence[0].terms[i].text=="that")
       {
-        if(isFirstNoun && !isSecondNoun)
+        if(sentence[0].terms[i-1].tags.includes("Noun"))
         {
-          isFirstSet = true;
+          return true;
         }
-        else if(isSecondNoun)
+      }
+    }
+
+    if(sentence[0].terms[i].tags.includes("Preposition"))
+    {
+      for(let k=0; k<4; k++)
+      {
+        if(sentence[0].terms[i].text == RP[k] && i!=0)
         {
-          isSecondSet = true;
+          return true;
         }
       }
     }
   }
+  
 
   if(isSecondSet === true)
   {
@@ -172,6 +220,7 @@ function isComplex(sentence)
 function isCompounds(sentence)
 {
   const FANBOYS = ["for", "and", "nor", "but", "or", "yet", "so"];
+  const RP = ["who", "where", "which", "whose"];
   let isFirstNoun = false;
   let isSecondNoun = false;
   let isFirstSet = false;
@@ -179,17 +228,6 @@ function isCompounds(sentence)
 
   for(let i = 0; i<sentence[0].terms.length; i++)
   {
-    if(sentence[0].terms[i].tags.includes("Noun"))
-    {
-      if(isFirstSet)
-      {
-        isSecondNoun = true;
-      }
-      else
-      {
-        isFirstNoun = true;
-      } 
-    }
 
     if(sentence[0].terms[i].tags.includes("Verb"))
     {
@@ -203,35 +241,72 @@ function isCompounds(sentence)
       }
     }
 
-    if(FANBOYS.includes(sentence[0].terms[i].normal))
+    if(sentence[0].terms[i].tags.includes("Noun"))
     {
-      let isIllegal = false;
-      if(sentence[0].terms[i].normal==="and")
+      if(isFirstSet)
       {
-        if(i<sentence[0].terms.length-2)
-        {
-          if(sentence[0].terms[i+2].tags.includes("Verb"))
-          {
-            isFANBOYS = true;
-          }
-          else
-          {
-            isIllegal = true;
-          }
-        }
-        else
-        {
-          isIllegal = true;
-        }
+        isSecondNoun = true;
       }
-
-      if(isFirstSet && !isIllegal)
+      else
       {
-        isFANBOYS = true;
+        isFirstNoun = true;
+      } 
+    }
+
+
+    if(sentence[0].terms[i].post ==", ")
+    {
+      if(isFirstSet)
+      {
+        if(i<sentence[0].terms.length-1 && FANBOYS.includes(sentence[0].terms[i+1].normal))
+        {
+          let j = i+2;
+          let isRP = false;
+          let n = false;
+          let v = false;
+          while(j<sentence[0].terms.length)
+          {
+            if(sentence[0].terms[j].tags.includes("Conjunction"))
+            {
+              break;
+            }
+
+            if(sentence[0].terms[j].text=="that" && sentence[0].terms[j-1].tags.includes("Noun"))
+            {
+              isRP = true;
+            }
+
+            for(let k=0; k<4; k++)
+            {
+              if(sentence[0].terms[i].text == RP[k])
+              { 
+                isRP = true;
+              }
+            }
+
+            if(!isRP && sentence[0].terms[j].tags.includes("Noun"))
+            {
+              n = true;
+            }
+
+            if(!isRP && sentence[0].terms[j].tags.includes("Verb"))
+            {
+              v = true;
+            }
+
+            if(n && v)
+            {
+              isFANBOYS = true;
+            }
+
+            j++;
+          }
+        }
       }
     }
-    
   }
+    
+  
   
   if(isFANBOYS)
   {
@@ -242,22 +317,22 @@ function isCompounds(sentence)
     return false;
   }
 }
-
 //Noun Phraseを検出して色を置き換えます。
 function detectNounPhrase(doc)
 {
   let result = doc.text();
   let jsonObj = doc.json();
   let firstNoun = false;
+  let isVerb = false;
+  let isRP = false;
 
   let NP = [];
   let msg = [];
-  msg.push("color");
 
   let words = [];
-
   let NPwords = [];
 
+  const RP = ["who", "where", "which", "whose"];
   for(let i=0; i<jsonObj[0].terms.length; i++)
   {
     let isComma = false;
@@ -271,10 +346,22 @@ function detectNounPhrase(doc)
     }
     else if(jsonObj[0].terms[i].tags.includes("Determiner"))
     {
-      NP.push("Determiner");
-      if(jsonObj[0].terms[i].post==", ") isComma = true;
-      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
-      words.push(word);
+      if( i>0 && jsonObj[0].terms[i].text=="that")
+      {
+        if(jsonObj[0].terms[i-1].tags.includes("Noun"))
+        {
+          isRP = true;
+        }
+      }
+
+      if(!isRP)
+      {
+        NP.push("Determiner");
+        if(jsonObj[0].terms[i].post==", ") isComma = true;
+        let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+        words.push(word);
+        firstNoun = true;    
+      }
     }
     else if(jsonObj[0].terms[i].tags.includes("Adjective"))
     {
@@ -285,6 +372,14 @@ function detectNounPhrase(doc)
     }
     else if(jsonObj[0].terms[i].tags.includes("Preposition"))
     {
+      for(let j=0; j<4; j++)
+      {
+        if(jsonObj[0].terms[i].text == RP[j])
+        {
+          isRP = true;
+        }
+      }
+      
       NP.push("Preposition");
       if(jsonObj[0].terms[i].post==", ") isComma = true;
       let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
@@ -313,13 +408,73 @@ function detectNounPhrase(doc)
           NP = [];
         }
       }
+      else
+      {
+        if(words.length>0)
+        {
+          NPwords.push(words.join(' '));
+        }
+
+        words = [];
+        NP = [];
+      }
       
       NPwords.push(jsonObj[0].terms[i].text+jsonObj[0].terms[i].post);
       
       firstNoun = false;
     }
 
-    if(isComma)
+    if(isRP)
+    {
+      NP.push("Relative pronoun");
+      let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+      words.push(word);
+      i++
+      let v = false;
+      while(i<jsonObj[0].terms.length)
+      {
+        if(jsonObj[0].terms[i].tags.includes("Verb"))
+        {
+          if(!v)
+          {
+            NP.push(jsonObj[0].terms[i].tags[0]);
+            let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+            words.push(word);
+            v = true;
+          }
+          else
+          {
+            i--;
+            break;
+          }
+        }
+        else
+        {
+          NP.push(jsonObj[0].terms[i].tags[0]);
+          let word = jsonObj[0].terms[i].text+jsonObj[0].terms[i].post;
+          words.push(word);
+        }
+        i++;
+      }
+      if(words.length>0)
+      {
+        htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
+        NPwords.push(htmlText);
+        words = [];
+      }
+      if(NP.length>0)
+      {
+        msg.push(NP.join('/ '));
+        NP = [];
+      }
+      firstNoun = false;
+      isComma = false;
+      isVerb = false;
+      isRP = false;
+      continue;
+    }
+
+    if(isComma && firstNoun && isVerb)
     {
       console.log("isComma");
       if(words.length>0)
@@ -333,19 +488,38 @@ function detectNounPhrase(doc)
         msg.push(NP.join(' '));
         NP = [];
       }
-      
       firstNoun = false;
+      isComma = false;
+      isVerb = false;
+    }
+    else if(isComma && !firstNoun && !isVerb)
+    {
+      if(words.length>0)
+      {
+        NPwords.push(words.join(' '));
+      }
+      words = [];
+      NP = [];
+    }
+
+    if(jsonObj[0].terms[i].tags.includes("Verb"))
+    {
+      isVerb = true;
     }
     
   }
 
-  if(words.length>0)
+  if(words.length>0 && firstNoun)
   {
     htmlText = `<span class="nounPhrase">`+words.join(' ')+`</span>`;
     NPwords.push(htmlText);
   }
+  else
+  {
+    NPwords.push(words.join(' '));
+  }
 
-  if(NP.length>0)
+  if(NP.length>0 && firstNoun)
   {
     msg.push(NP.join(' '));
   }
