@@ -88,9 +88,6 @@ const processStart = () => {
 function getType(doc) {
 
   let NumOfClauses = doc.clauses().length;
-
-  //let NumOfVerb = doc.verbs().length;
-
   const jsonObj = doc.json();
   console.log(jsonObj);
 
@@ -253,7 +250,7 @@ function isCompounds(sentence)
       } 
     }
 
-
+    //For edge cases "S V A, B, and C if S V"
     if(sentence[0].terms[i].post ==", ")
     {
       if(isFirstSet)
@@ -261,9 +258,9 @@ function isCompounds(sentence)
         if(i<sentence[0].terms.length-1 && FANBOYS.includes(sentence[0].terms[i+1].normal))
         {
           let j = i+2;
-          let isRP = false;
-          let n = false;
-          let v = false;
+          let isRP = false;//Relative pronouns
+          let n = false;//Nouns
+          let v = false;//Verbs
           while(j<sentence[0].terms.length)
           {
             if(sentence[0].terms[j].tags.includes("Conjunction"))
@@ -317,7 +314,7 @@ function isCompounds(sentence)
     return false;
   }
 }
-//Noun Phraseを検出して色を置き換えます。
+//Put color for noun phrases.
 function detectNounPhrase(doc)
 {
   let result = doc.text();
@@ -332,7 +329,7 @@ function detectNounPhrase(doc)
   let words = [];
   let NPwords = [];
 
-  const RP = ["who", "where", "which", "whose"];
+  const RP = ["who", "where", "which", "whose"];//relative pronouns
   for(let i=0; i<jsonObj[0].terms.length; i++)
   {
     let isComma = false;
